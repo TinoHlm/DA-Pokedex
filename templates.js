@@ -22,8 +22,8 @@ function paginationTemplate(page, pages) {
   const nextDisabled = page >= pages ? "disabled" : "";
 
   return `
-    <button type="button" class="page-button" data-page="${page - 1}" ${prevDisabled}>Previous</button>
+    <button type="button" class="page-button" aria-label="Previous page" data-page="${page - 1}" ${prevDisabled}>Previous</button>
     <span class="page-status">Page ${page} of ${pages}</span>
-    <button type="button" class="page-button" data-id="load-more-button" data-page="${page + 1}" ${nextDisabled}>Next</button>
+    <button type="button" class="page-button" aria-label="Next page" data-id="load-more-button" data-page="${page + 1}" ${nextDisabled}>Next</button>
   `;
 }

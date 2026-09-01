@@ -86,7 +86,9 @@
 }
 
 .card-id {
-  align-self: flex-start;
+  position: absolute;
+  top: 8px;
+  left: 12px;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.75);
   font-variant-numeric: tabular-nums;

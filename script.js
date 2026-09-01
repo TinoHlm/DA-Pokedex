@@ -65,11 +65,19 @@ function toCardModel(details) {
   };
 }
 
-function renderPage(page) {
+function loadPage(page) {
+  if (pageCache.has(page)) return Promise.resolve(pageCache.get(page));
+
   return fetchPageDetails(page).then((details) => {
-    const cards = details.map((detail) =>
-      pokemonCardTemplate(toCardModel(detail)),
-    );
+    const pokemon = details.map((detail) => toCardModel(detail));
+    pageCache.set(page, pokemon);
+    return pokemon;
+  });
+}
+
+function renderPage(page) {
+  return loadPage(page).then((pokemon) => {
+    const cards = pokemon.map((entry) => pokemonCardTemplate(entry));
     const listElement = document.querySelector('[data-id="pokemon-list"]');
     listElement.innerHTML = cards.join("");
   });
@@ -80,12 +88,17 @@ function renderPagination() {
   paginationElement.innerHTML = paginationTemplate(currentPage, totalPages);
 }
 
-function goToPage(page) {
+function goToPage(page, pushUrl = true) {
+  if (isLoading) return;
   if (page < 1) return;
   if (totalPages > 0 && page > totalPages) return;
 
   currentPage = page;
-  return renderPage(page).then(() => {
+  if (pushUrl) history.pushState({ page }, "", `?page=${page}`);
+
+  setLoading(true);
+  return renderPage(page).finally(() => {
+    setLoading(false);
     renderPagination();
   });
 }
@@ -119,23 +132,10 @@ function setLoading(state) {
   });
 }
 
-function goToPage(page, pushUrl = true) {
-  if (isLoading) return;
-  if (page < 1) return;
-  if (totalPages > 0 && page > totalPages) return;
-
-  currentPage = page;
-  if (pushUrl) history.pushState({ page }, "", `?page=${page}`);
-
-  setLoading(true);
-  return renderPage(page).finally(() => {
-    setLoading(false);
-    renderPagination();
-  });
-}
-
 window.addEventListener("popstate", () => {
   goToPage(getPageFromUrl(), false);
 });
 
+
+initPagination();
 goToPage(getPageFromUrl(), false);
