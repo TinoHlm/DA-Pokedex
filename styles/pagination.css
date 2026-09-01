@@ -17,7 +17,9 @@
   font: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition: 0.15s ease, 0.15s ease;
+  transition:
+    0.15s ease,
+    0.15s ease;
 }
 
 .page-button:hover:not(:disabled) {

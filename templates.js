@@ -1,10 +1,17 @@
+function pokemonTypeTemplate(types) {
+  return types
+    .map((type) => `<span class="type-badge">${type}</span>`)
+    .join("");
+}
+
 function pokemonCardTemplate(pokemon) {
   return `
     <li class="pokemon-card">
-      <button class="pokemon-card-button" type="button" data-id="card" aria-label="Show details for ${pokemon.name}">
+      <button class="pokemon-card-button type-${pokemon.types[0]}" type="button" data-id="card" aria-label="Show details for ${pokemon.name}">
         <span class="card-id">#${pokemon.id}</span>
         <img data-id="card-image" src="${pokemon.image}" alt="${pokemon.name}" />
         <span class="card-name">${pokemon.name}</span>
+        <span class="card-types">${pokemonTypeTemplate(pokemon.types)}</span>
       </button>
     </li>
   `;

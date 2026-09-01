@@ -48,8 +48,13 @@
   padding: 12px 10px;
   border: none;
   border-radius: 14px;
-  background-color: #262b31;
-  color: var(--text-primary);
+  background-color: var(--type-color, #262b31);
+  background-image: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(0, 0, 0, 0.1)
+  );
+  color: var(--type-ink, #ffffff);
   font: inherit;
   cursor: pointer;
   transition:
@@ -78,7 +83,7 @@
 .card-id {
   align-self: flex-start;
   font-size: 13px;
-  color: #8b939c;
+  color: rgba(255, 255, 255, 0.75);
   font-variant-numeric: tabular-nums;
 }
 
@@ -87,4 +92,77 @@
   font-weight: 600;
   text-transform: capitalize;
   color: var(--text-heading);
+}
+
+.card-types {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.type-badge {
+  padding: 3px 12px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Card Colors*/
+.type-normal {
+  --type-color: #74797f;
+}
+.type-fire {
+  --type-color: #d9603a;
+}
+.type-water {
+  --type-color: #4a7fc1;
+}
+.type-electric {
+  --type-color: #c9a318;
+  --type-ink: #2a2410;
+}
+.type-grass {
+  --type-color: #47954b;
+}
+.type-ice {
+  --type-color: #4f9aab;
+}
+.type-fighting {
+  --type-color: #b8395c;
+}
+.type-poison {
+  --type-color: #90519f;
+}
+.type-ground {
+  --type-color: #b0713c;
+}
+.type-flying {
+  --type-color: #6e86c4;
+}
+.type-psychic {
+  --type-color: #d1505f;
+}
+.type-bug {
+  --type-color: #6f9422;
+}
+.type-rock {
+  --type-color: #8d7d45;
+}
+.type-ghost {
+  --type-color: #4f5d99;
+}
+.type-dragon {
+  --type-color: #3b5cc4;
+}
+.type-dark {
+  --type-color: #4b4854;
+}
+.type-steel {
+  --type-color: #5b7e8f;
+}
+.type-fairy {
+  --type-color: #c25fa8;
 }

@@ -91,6 +91,15 @@ header {
   background-color: var(--button-primary-hover);
 }
 
+.loader{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (min-width: 900px) and (min-height: 700px) {
   body {
     height: 100dvh;

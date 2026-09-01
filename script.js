@@ -1,6 +1,6 @@
 const apiBaseUrl = "https://pokeapi.co/api/v2/pokemon";
 const pageSize = 20; // Number of Pokemon per page
-const placeholderImage = "./assets/imgs/pokeball.png";
+const placeholderImage = "./assets/imgs/unknown-pokemon.png"; // Image when the Pokemon doesnt have an Image Linked
 
 let totalPages = 0; // Number of available pages (set after first fetch)
 let currentPage = 1; // Current page
