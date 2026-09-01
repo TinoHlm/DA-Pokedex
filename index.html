@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,34 +10,48 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./style.css" />
+    <script src="./templates.js" defer></script>
     <script src="./script.js" defer></script>
-    <title>Pokedex | Tino Helmbold</title>
+    <title>Pokédex | Tino Helmbold</title>
     <link rel="icon" type="image/x-icon" href="./assets/imgs/pokeball.png" />
+    <link rel="stylesheet" href="./styles/template-styles.css" />
+    <link rel="stylesheet" href="./styles/pagination.css" />
   </head>
 
-  <body>
+  <body onload="initPagination()">
     <header>
       <a href="./index.html" class="logo">
         <img src="./assets/imgs/pokeball.png" alt="Pokeball Logo" />
         <h1>
-            <span class="logo-light">Poke</span><span class="logo-red">Dex</span>
-            <span class="logo-author"> by T.H</span>
+          <span class="logo-light">Poké</span><span class="logo-red">Dex</span>
+          <span class="logo-author"> by T.H</span>
         </h1>
       </a>
       <div class="search">
         <input
-          type="text"
+          type="search"
           data-id="search-input"
-          placeholder="Suche nach einem Pokémon..."
+          aria-label="Search for a Pokémon"
+          placeholder="Search for a Pokémon"
+          minlength="3"
         />
-        <button data-id="search-button">Suchen</button>
+        <button
+          data-id="search-button"
+          aria-label="Search for a Pokémon"
+          type="button"
+        >
+          Search
+        </button>
       </div>
     </header>
 
     <main data-id="content">
-      <ul>
-        <li></li>
-      </ul>
+      <ul data-id="pokemon-list"></ul>
+      <nav
+        class="pagination"
+        data-id="pagination"
+        aria-label="Pokemon pages"
+      ></nav>
     </main>
   </body>
 </html>

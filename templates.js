@@ -1,0 +1,22 @@
+function pokemonCardTemplate(pokemon) {
+  return `
+    <li class="pokemon-card">
+      <button class="pokemon-card-button" type="button" data-id="card" aria-label="Show details for ${pokemon.name}">
+        <span class="card-id">#${pokemon.id}</span>
+        <img data-id="card-image" src="${pokemon.image}" alt="${pokemon.name}" />
+        <span class="card-name">${pokemon.name}</span>
+      </button>
+    </li>
+  `;
+}
+
+function paginationTemplate(page, pages) {
+  const prevDisabled = page <= 1 ? "disabled" : "";
+  const nextDisabled = page >= pages ? "disabled" : "";
+
+  return `
+    <button type="button" class="page-button" data-page="${page - 1}" ${prevDisabled}>Previous</button>
+    <span class="page-status">Page ${page} of ${pages}</span>
+    <button type="button" class="page-button" data-id="load-more-button" data-page="${page + 1}" ${nextDisabled}>Next</button>
+  `;
+}
