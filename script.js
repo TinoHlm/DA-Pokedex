@@ -5,6 +5,7 @@ const placeholderImage = "./assets/imgs/unknown-pokemon.png"; // Image when the 
 let totalPages = 0; // Number of available pages (set after first fetch)
 let currentPage = 1; // Current page
 let bufferSize = 0; // Number of preloaded page per direction
+let isLoading = false; // Blocks further page loads while one is running
 
 const pageCache = new Map(); // Caches pages that have been already loaded
 
@@ -107,16 +108,34 @@ function getPageFromUrl() {
   return 1;
 }
 
+function setLoading(state) {
+  isLoading = state;
+  const pagination = document.querySelector('[data-id="pagination"]');
+
+  document.querySelector('[data-id="loader"]').hidden = !state;
+  pagination.classList.toggle("is-loading", state);
+  pagination.querySelectorAll(".page-button").forEach((button) => {
+    button.disabled = state;
+  });
+}
+
 function goToPage(page, pushUrl = true) {
+  if (isLoading) return;
   if (page < 1) return;
   if (totalPages > 0 && page > totalPages) return;
 
   currentPage = page;
   if (pushUrl) history.pushState({ page }, "", `?page=${page}`);
 
-  return renderPage(page).then(() => {
+  setLoading(true);
+  return renderPage(page).finally(() => {
+    setLoading(false);
     renderPagination();
   });
 }
+
+window.addEventListener("popstate", () => {
+  goToPage(getPageFromUrl(), false);
+});
 
 goToPage(getPageFromUrl(), false);
