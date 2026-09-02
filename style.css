@@ -23,6 +23,15 @@ main {
   gap: 16px;
 }
 
+html {
+  background-color: var(--background-color);
+  scrollbar-gutter: stable;
+}
+
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
 body {
   font-family: "Space Grotesk", sans-serif;
   background-image: url("./assets/imgs/pokedex-dark-wallpaper-1920x1080.svg");
@@ -151,17 +160,16 @@ header {
 }
 
 .loader {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  background-color: rgba(27, 30, 34, 0.75);
+  background-color: rgba(27, 30, 34, 0.85);
   color: var(--text-heading);
-  border-radius: 14px;
-  z-index: 5;
+  z-index: 20;
 }
 
 .loader[hidden] {
@@ -273,20 +281,17 @@ header {
 
 .not-found {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
-  padding: 56px 20px;
-}
-
-.not-found {
-  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 56px 20px;
   text-align: center;
+}
+
+.not-found-image {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
 }
 
 .not-found-title {
@@ -300,6 +305,79 @@ header {
   margin: 0;
   font-size: 18px;
   color: var(--text-muted);
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 14px max(20px, calc((100% - var(--content-max)) / 2));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--background-color);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer-accent {
+  color: var(--text-secondary);
+}
+
+.footer-center {
+  text-align: center;
+}
+
+.footer-note {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.footer-github {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-link {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+.footer-link:focus-visible {
+  outline: 2px solid var(--button-primary);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.footer-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+@media (max-width: 560px) {
+  .footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 16px 12px;
+  }
+
+  .footer-github {
+    justify-self: center;
+  }
 }
 
 .message:not(:empty) {

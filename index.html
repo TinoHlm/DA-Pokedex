@@ -16,6 +16,7 @@
     <link rel="icon" type="image/x-icon" href="./assets/imgs/pokeball.png" />
     <link rel="stylesheet" href="./styles/template-styles.css" />
     <link rel="stylesheet" href="./styles/pagination.css" />
+    <link rel="stylesheet" href="./styles/dialog.css" />
     <link rel="preconnect" href="https://raw.githubusercontent.com" />
   </head>
 
@@ -31,6 +32,8 @@
       <div class="search">
         <input
           type="search"
+          id="search-input"
+          name="search"
           data-id="search-input"
           aria-label="Search for a Pokémon"
           placeholder="Search for a Pokémon"
@@ -95,5 +98,63 @@
         <span>Loading Pokémon...</span>
       </div>
     </main>
+    <dialog class="dialog" data-id="dialog" aria-label="Pokémon details">
+      <button
+        class="dialog-close"
+        data-id="close-dialog-button"
+        type="button"
+        aria-label="Close details"
+      >
+        x
+      </button>
+      <button
+        class="dialog-nav dialog-prev"
+        data-id="prev-button"
+        type="button"
+        aria-label="Previous Pokémon"
+      >
+        &lt;
+      </button>
+      <button
+        class="dialog-nav dialog-next"
+        data-id="next-button"
+        type="button"
+        aria-label="Next Pokémon"
+      >
+        &gt;
+      </button>
+      <div class="dialog-content" data-id="overlay-pokemon-name"></div>
+    </dialog>
+
+    <footer class="footer">
+      <p class="footer-brand">
+        Poké<span class="footer-accent">Dex</span> by T.H
+      </p>
+      <div class="footer-center">
+        <p class="footer-credit">
+          Data provided by
+          <a
+            class="footer-link"
+            href="https://pokeapi.co"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="PokeAPI"
+          >
+            PokéAPI
+          </a>
+        </p>
+        <p class="footer-note">Educational project</p>
+      </div>
+      <a
+        class="footer-link footer-github"
+        href="https://github.com/TinoHlm/DA-Pokedex"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Project on GitHub"
+      >
+        GitHub
+        <span class="footer-icon" aria-hidden="true">&#8599;</span>
+      </a>
+    </footer>
   </body>
 </html>

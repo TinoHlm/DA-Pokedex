@@ -6,9 +6,12 @@ let totalPages = 0; // Number of available pages (set after first fetch)
 let currentPage = 1; // Current page
 let isLoading = false; // Blocks further page loads while one is running
 let allPokemonNames = null; // Cached name list for the search
+let currentList = []; // Pokemon currently shown in the list
+let currentIndex = 0; // Index of the Pokemon shown in the dialog
 
 const pageCache = new Map(); // Caches pages that have been already loaded
 const pokemonCache = new Map(); // Caches single Pokemon models by url
+const evolutionCache = new Map(); // Caches evolution chains by species url
 const searchLimit = 30; // Maximum number of search results to load
 
 function getPageOffset(page) {
@@ -93,12 +96,27 @@ function preloadImages(pokemon) {
   return Promise.all(loads);
 }
 
-function toCardModel(details) {
+function toStatsModel(stats) {
+  const result = {};
+
+  stats.forEach((entry) => {
+    result[entry.stat.name] = entry.base_stat;
+  });
+
+  return result;
+}
+
+function toPokemonModel(details) {
   return {
     id: details.id,
     name: details.name,
     types: details.types.map((entry) => entry.type.name),
     image: getPokemonImage(details),
+    height: details.height / 10,
+    weight: details.weight / 10,
+    abilities: details.abilities.map((entry) => entry.ability.name),
+    stats: toStatsModel(details.stats),
+    speciesUrl: details.species.url,
   };
 }
 
@@ -106,7 +124,7 @@ function loadPage(page) {
   if (pageCache.has(page)) return Promise.resolve(pageCache.get(page));
 
   return fetchPageDetails(page).then((details) => {
-    const pokemon = details.map((detail) => toCardModel(detail));
+    const pokemon = details.map((detail) => toPokemonModel(detail));
     pageCache.set(page, pokemon);
     return pokemon;
   });
@@ -118,7 +136,7 @@ function loadPokemon(pokemon) {
   }
 
   return fetchPokemonDetails(pokemon).then((details) => {
-    const model = toCardModel(details);
+    const model = toPokemonModel(details);
     pokemonCache.set(pokemon.url, model);
     return model;
   });
@@ -135,7 +153,10 @@ function renderPage(page) {
 }
 
 function renderCards(pokemon) {
-  const cards = pokemon.map((entry) => pokemonCardTemplate(entry));
+  currentList = pokemon;
+  const cards = pokemon.map((entry, index) =>
+    pokemonCardTemplate(entry, index),
+  );
   document.querySelector('[data-id="pokemon-list"]').innerHTML = cards.join("");
 }
 
@@ -216,7 +237,6 @@ function setPaginationVisible(visible) {
 }
 
 function showPokemonList() {
-  setPaginationVisible(true);
   showMessage("");
   return goToPage(currentPage, false);
 }
@@ -257,10 +277,167 @@ function initSearchInput() {
   });
 }
 
+function renderDialog() {
+  const pokemon = currentList[currentIndex];
+  const content = document.querySelector('[data-id="overlay-pokemon-name"]');
+
+  content.innerHTML = dialogTemplate(pokemon);
+  updateDialogNav();
+}
+
+function openDialog(index) {
+  currentIndex = index;
+  renderDialog();
+  document.querySelector('[data-id="dialog"]').showModal();
+}
+
+function closeDialog() {
+  document.querySelector('[data-id="dialog"]').close();
+}
+
+function updateDialogNav() {
+  const prev = document.querySelector('[data-id="prev-button"]');
+  const next = document.querySelector('[data-id="next-button"]');
+
+  prev.disabled = currentIndex === 0;
+  next.disabled = currentIndex === currentList.length - 1;
+}
+
+function showDialogAt(index) {
+  if (index < 0 || index >= currentList.length) return;
+
+  currentIndex = index;
+  renderDialog();
+}
+
+function initDialogNav() {
+  document
+    .querySelector('[data-id="prev-button"]')
+    .addEventListener("click", () => showDialogAt(currentIndex - 1));
+
+  document
+    .querySelector('[data-id="next-button"]')
+    .addEventListener("click", () => showDialogAt(currentIndex + 1));
+}
+
+function initDialogClose() {
+  const dialog = document.querySelector('[data-id="dialog"]');
+
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) closeDialog();
+  });
+
+  document
+    .querySelector('[data-id="close-dialog-button"]')
+    .addEventListener("click", closeDialog);
+}
+
+function initDialog() {
+  initDialogClose();
+  initCardClicks();
+  initDialogTabs();
+  initDialogNav();
+}
+
+function initCardClicks() {
+  const listElement = document.querySelector('[data-id="pokemon-list"]');
+
+  listElement.addEventListener("click", (event) => {
+    const card = event.target.closest('[data-id="card"]');
+    if (!card) return;
+    openDialog(Number(card.dataset.index));
+  });
+}
+
+function showDialogTab(name) {
+  const content = document.querySelector('[data-id="overlay-pokemon-name"]');
+
+  content.querySelectorAll(".dialog-tab").forEach((tab) => {
+    tab.classList.toggle("is-active", tab.dataset.tab === name);
+  });
+
+  content.querySelectorAll(".dialog-panel").forEach((panel) => {
+    panel.hidden = panel.dataset.panel !== name;
+  });
+
+  if (name === "evolution") renderEvolution();
+}
+
+function idFromUrl(url) {
+  return Number(url.split("/").filter(Boolean).pop());
+}
+
+function getEvolutionLevels(chain) {
+  const levels = [];
+  let current = [chain];
+
+  while (current.length > 0) {
+    levels.push(current.map((node) => node.species.url));
+    current = current.flatMap((node) => node.evolves_to);
+  }
+
+  return levels;
+}
+
+function fetchChainData(speciesUrl) {
+  return fetch(speciesUrl)
+    .then((response) => response.json())
+    .then((species) => fetch(species.evolution_chain.url))
+    .then((response) => response.json());
+}
+
+function fetchEvolutionChain(speciesUrl) {
+  if (evolutionCache.has(speciesUrl)) {
+    return Promise.resolve(evolutionCache.get(speciesUrl));
+  }
+
+  return fetchChainData(speciesUrl).then((data) => {
+    const levels = getEvolutionLevels(data.chain);
+    evolutionCache.set(speciesUrl, levels);
+    return levels;
+  });
+}
+
+function loadEvolutionStages(speciesUrls) {
+  const loads = speciesUrls.map((url) =>
+    loadPokemon({ url: `${apiBaseUrl}/${idFromUrl(url)}/` }),
+  );
+
+  return Promise.all(loads);
+}
+
+function renderEvolution() {
+  const panel = document.querySelector('[data-panel="evolution"]');
+  if (panel.dataset.loaded) return;
+
+  panel.dataset.loaded = "yes";
+  panel.innerHTML = evolutionStatusTemplate("Loading evolution chain...");
+
+  return fetchEvolutionChain(currentList[currentIndex].speciesUrl)
+    .then((levels) => Promise.all(levels.map(loadEvolutionStages)))
+    .then((levels) => {
+      panel.innerHTML = evolutionChainTemplate(levels);
+    })
+    .catch(() => {
+      panel.innerHTML = evolutionStatusTemplate("Evolution chain unavailable.");
+    });
+}
+
+function initDialogTabs() {
+  const content = document.querySelector('[data-id="overlay-pokemon-name"]');
+
+  content.addEventListener("click", (event) => {
+    const tab = event.target.closest(".dialog-tab");
+    if (!tab) return;
+    showDialogTab(tab.dataset.tab);
+  });
+}
+
 window.addEventListener("popstate", () => {
   goToPage(getPageFromUrl(), false);
 });
 
 initPagination();
 initSearch();
+initDialog();
 goToPage(getPageFromUrl(), false);

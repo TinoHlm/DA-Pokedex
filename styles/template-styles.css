@@ -73,6 +73,10 @@ body.is-search [data-id="pokemon-list"] {
   z-index: 1;
 }
 
+.pokemon-card-button:hover .type-icon img {
+  transform: none;
+}
+
 .pokemon-card-button:focus-visible {
   outline: 3px solid var(--button-primary);
   outline-offset: 3px;
@@ -107,10 +111,30 @@ body.is-search [data-id="pokemon-list"] {
 }
 
 .card-types {
+  position: absolute;
+  top: 8px;
+  right: 10px;
   display: flex;
-  gap: 6px;
-  width: 100%;
-  justify-content: space-between;
+  gap: 8px;
+  width: auto;
+  justify-content: flex-end;
+  z-index: 2;
+}
+
+.type-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--type-color, #4b4854);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.type-icon img {
+  width: 62%;
+  height: 62%;
+  filter: brightness(0) invert(1);
 }
 
 .type-badge {
