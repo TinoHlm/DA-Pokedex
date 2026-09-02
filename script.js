@@ -4,8 +4,8 @@ const placeholderImage = "./assets/imgs/unknown-pokemon.png"; // Image when the 
 
 let totalPages = 0; // Number of available pages (set after first fetch)
 let currentPage = 1; // Current page
-let bufferSize = 0; // Number of preloaded page per direction
 let isLoading = false; // Blocks further page loads while one is running
+let allPokemonNames = null; // Cached name list for the search
 
 const pageCache = new Map(); // Caches pages that have been already loaded
 
@@ -44,6 +44,17 @@ function fetchPageDetails(page) {
   });
 }
 
+function fetchAllPokemonNames() {
+  if (allPokemonNames) return Promise.resolve(allPokemonNames);
+
+  return fetch(`${apiBaseUrl}?limit=100000&offset=0`)
+    .then((response) => response.json())
+    .then((pageData) => {
+      allPokemonNames = pageData.results;
+      return allPokemonNames;
+    });
+}
+
 function getPokemonImage(details) {
   const sprites = details.sprites;
   const sources = [
@@ -54,6 +65,20 @@ function getPokemonImage(details) {
   ];
 
   return sources.find((url) => url) ?? placeholderImage;
+}
+
+function preloadImages(pokemon) {
+  const loads = pokemon.map((entry) => {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = resolve;
+      image.onerror = resolve;
+      setTimeout(resolve, 5000);
+      image.src = entry.image;
+    });
+  });
+
+  return Promise.all(loads);
 }
 
 function toCardModel(details) {
@@ -77,9 +102,11 @@ function loadPage(page) {
 
 function renderPage(page) {
   return loadPage(page).then((pokemon) => {
-    const cards = pokemon.map((entry) => pokemonCardTemplate(entry));
-    const listElement = document.querySelector('[data-id="pokemon-list"]');
-    listElement.innerHTML = cards.join("");
+    return preloadImages(pokemon).then(() => {
+      const cards = pokemon.map((entry) => pokemonCardTemplate(entry));
+      const listElement = document.querySelector('[data-id="pokemon-list"]');
+      listElement.innerHTML = cards.join("");
+    });
   });
 }
 
@@ -135,7 +162,6 @@ function setLoading(state) {
 window.addEventListener("popstate", () => {
   goToPage(getPageFromUrl(), false);
 });
-
 
 initPagination();
 goToPage(getPageFromUrl(), false);
