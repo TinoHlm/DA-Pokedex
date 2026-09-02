@@ -8,6 +8,8 @@ let isLoading = false; // Blocks further page loads while one is running
 let allPokemonNames = null; // Cached name list for the search
 
 const pageCache = new Map(); // Caches pages that have been already loaded
+const pokemonCache = new Map(); // Caches single Pokemon models by url
+const searchLimit = 30; // Maximum number of search results to load
 
 function getPageOffset(page) {
   return (page - 1) * pageSize;
@@ -55,6 +57,16 @@ function fetchAllPokemonNames() {
     });
 }
 
+function findPokemonByName(term) {
+  const cleanTerm = term.trim().toLowerCase();
+
+  return fetchAllPokemonNames().then((names) => {
+    return names
+      .filter((entry) => entry.name.includes(cleanTerm))
+      .slice(0, searchLimit);
+  });
+}
+
 function getPokemonImage(details) {
   const sprites = details.sprites;
   const sources = [
@@ -100,14 +112,50 @@ function loadPage(page) {
   });
 }
 
+function loadPokemon(pokemon) {
+  if (pokemonCache.has(pokemon.url)) {
+    return Promise.resolve(pokemonCache.get(pokemon.url));
+  }
+
+  return fetchPokemonDetails(pokemon).then((details) => {
+    const model = toCardModel(details);
+    pokemonCache.set(pokemon.url, model);
+    return model;
+  });
+}
+
 function renderPage(page) {
   return loadPage(page).then((pokemon) => {
     return preloadImages(pokemon).then(() => {
-      const cards = pokemon.map((entry) => pokemonCardTemplate(entry));
-      const listElement = document.querySelector('[data-id="pokemon-list"]');
-      listElement.innerHTML = cards.join("");
+      document.body.classList.remove("is-search");
+      setPaginationVisible(true);
+      renderCards(pokemon);
     });
   });
+}
+
+function renderCards(pokemon) {
+  const cards = pokemon.map((entry) => pokemonCardTemplate(entry));
+  document.querySelector('[data-id="pokemon-list"]').innerHTML = cards.join("");
+}
+
+function renderNotFound() {
+  document.querySelector('[data-id="pokemon-list"]').innerHTML = "";
+  showMessage(notFoundTemplate());
+  return Promise.resolve();
+}
+
+function renderSearchResults(matches) {
+  document.body.classList.add("is-search");
+  if (matches.length === 0) return renderNotFound();
+
+  showMessage("");
+  const loads = matches.map((pokemon) => loadPokemon(pokemon));
+  return Promise.all(loads).then((pokemon) => renderCards(pokemon));
+}
+
+function setSearchHint(visible) {
+  document.querySelector('[data-id="search-hint"]').hidden = !visible;
 }
 
 function renderPagination() {
@@ -159,9 +207,60 @@ function setLoading(state) {
   });
 }
 
+function showMessage(html) {
+  document.querySelector('[data-id="message"]').innerHTML = html;
+}
+
+function setPaginationVisible(visible) {
+  document.querySelector('[data-id="pagination"]').hidden = !visible;
+}
+
+function showPokemonList() {
+  setPaginationVisible(true);
+  showMessage("");
+  return goToPage(currentPage, false);
+}
+
+function runSearch() {
+  if (isLoading) return;
+
+  const term = document.querySelector('[data-id="search-input"]').value.trim();
+
+  if (term.length < 3) return setSearchHint(true);
+
+  setSearchHint(false);
+  setLoading(true);
+  setPaginationVisible(false);
+
+  return findPokemonByName(term)
+    .then((matches) => renderSearchResults(matches))
+    .finally(() => setLoading(false));
+}
+
+function initSearch() {
+  const button = document.querySelector('[data-id="search-button"]');
+
+  button.addEventListener("click", runSearch);
+  initSearchInput();
+}
+
+function initSearchInput() {
+  const input = document.querySelector('[data-id="search-input"]');
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") runSearch();
+  });
+
+  input.addEventListener("input", () => {
+    setSearchHint(false);
+    if (input.value.trim().length === 0) showPokemonList();
+  });
+}
+
 window.addEventListener("popstate", () => {
   goToPage(getPageFromUrl(), false);
 });
 
 initPagination();
+initSearch();
 goToPage(getPageFromUrl(), false);

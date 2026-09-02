@@ -27,3 +27,15 @@ function paginationTemplate(page, pages) {
     <button type="button" class="page-button" aria-label="Next page" data-id="load-more-button" data-page="${page + 1}" ${nextDisabled}>Next</button>
   `;
 }
+
+function notFoundTemplate() {
+  return `
+    <div class="not-found">
+      <img class="not-found-image" src="./assets/imgs/unknown-pokemon.png" alt="" />
+      <div>
+        <p class="not-found-title" data-id="not-found">No match found.</p>
+        <p class="not-found-hint">Try another name.</p>
+      </div>
+    </div>
+  `;
+}
