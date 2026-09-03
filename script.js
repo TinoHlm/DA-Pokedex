@@ -8,6 +8,7 @@ let isLoading = false; // Blocks further page loads while one is running
 let allPokemonNames = null; // Cached name list for the search
 let currentList = []; // Pokemon currently shown in the list
 let currentIndex = 0; // Index of the Pokemon shown in the dialog
+let isDialogBusy = false; // Blocks dialog navigation while a page is loading
 
 const pageCache = new Map(); // Caches pages that have been already loaded
 const pokemonCache = new Map(); // Caches single Pokemon models by url
@@ -193,10 +194,13 @@ function goToPage(page, pushUrl = true) {
   if (pushUrl) history.pushState({ page }, "", `?page=${page}`);
 
   setLoading(true);
-  return renderPage(page).finally(() => {
-    setLoading(false);
-    renderPagination();
-  });
+  return renderPage(page).finally(() => finishPageChange());
+}
+
+function finishPageChange() {
+  setLoading(false);
+  renderPagination();
+  window.scrollTo(0, 0);
 }
 
 function initPagination() {
@@ -243,9 +247,7 @@ function showPokemonList() {
 
 function runSearch() {
   if (isLoading) return;
-
   const term = document.querySelector('[data-id="search-input"]').value.trim();
-
   if (term.length < 3) return setSearchHint(true);
 
   setSearchHint(false);
@@ -295,29 +297,91 @@ function closeDialog() {
   document.querySelector('[data-id="dialog"]').close();
 }
 
-function updateDialogNav() {
-  const prev = document.querySelector('[data-id="prev-button"]');
-  const next = document.querySelector('[data-id="next-button"]');
-
-  prev.disabled = currentIndex === 0;
-  next.disabled = currentIndex === currentList.length - 1;
+function isSearchMode() {
+  return document.body.classList.contains("is-search");
 }
 
-function showDialogAt(index) {
-  if (index < 0 || index >= currentList.length) return;
+function hasPreviousPokemon() {
+  if (currentIndex > 0) return true;
+  return !isSearchMode() && currentPage > 1;
+}
 
-  currentIndex = index;
+function hasNextPokemon() {
+  if (currentIndex < currentList.length - 1) return true;
+  return !isSearchMode() && totalPages > 0 && currentPage < totalPages;
+}
+
+function updateDialogNav() {
+  document.querySelector('[data-id="prev-button"]').disabled =
+    !hasPreviousPokemon();
+  document.querySelector('[data-id="next-button"]').disabled = !hasNextPokemon();
+}
+
+function setDialogBusy(state) {
+  isDialogBusy = state;
+
+  if (state) {
+    document.querySelector('[data-id="prev-button"]').disabled = true;
+    document.querySelector('[data-id="next-button"]').disabled = true;
+    return;
+  }
+
+  updateDialogNav();
+}
+
+function applyDialogPage(page, pokemon, direction) {
+  currentPage = page;
+  history.replaceState({ page }, "", `?page=${page}`);
+  renderCards(pokemon);
+  currentIndex = direction > 0 ? 0 : currentList.length - 1;
+  renderPagination();
   renderDialog();
+}
+
+function navigateDialogPage(direction) {
+  const page = currentPage + direction;
+  if (page < 1) return;
+  if (totalPages > 0 && page > totalPages) return;
+
+  setDialogBusy(true);
+
+  return loadPage(page)
+    .then((pokemon) => applyDialogPage(page, pokemon, direction))
+    .catch(() => {})
+    .finally(() => setDialogBusy(false));
+}
+
+function navigateDialog(direction) {
+  if (isDialogBusy) return;
+
+  const target = currentIndex + direction;
+
+  if (target >= 0 && target < currentList.length) {
+    currentIndex = target;
+    renderDialog();
+    return;
+  }
+
+  if (isSearchMode()) return;
+  return navigateDialogPage(direction);
 }
 
 function initDialogNav() {
   document
     .querySelector('[data-id="prev-button"]')
-    .addEventListener("click", () => showDialogAt(currentIndex - 1));
+    .addEventListener("click", () => navigateDialog(-1));
 
   document
     .querySelector('[data-id="next-button"]')
-    .addEventListener("click", () => showDialogAt(currentIndex + 1));
+    .addEventListener("click", () => navigateDialog(1));
+}
+
+function initDialogKeys() {
+  document.addEventListener("keydown", (event) => {
+    if (!document.querySelector('[data-id="dialog"]').open) return;
+    if (event.key === "ArrowLeft") navigateDialog(-1);
+    if (event.key === "ArrowRight") navigateDialog(1);
+  });
 }
 
 function initDialogClose() {
@@ -337,6 +401,7 @@ function initDialog() {
   initCardClicks();
   initDialogTabs();
   initDialogNav();
+  initDialogKeys();
 }
 
 function initCardClicks() {
@@ -406,6 +471,10 @@ function loadEvolutionStages(speciesUrls) {
   return Promise.all(loads);
 }
 
+function showEvolution(panel, levels) {
+  panel.innerHTML = evolutionChainTemplate(levels);
+}
+
 function renderEvolution() {
   const panel = document.querySelector('[data-panel="evolution"]');
   if (panel.dataset.loaded) return;
@@ -415,9 +484,7 @@ function renderEvolution() {
 
   return fetchEvolutionChain(currentList[currentIndex].speciesUrl)
     .then((levels) => Promise.all(levels.map(loadEvolutionStages)))
-    .then((levels) => {
-      panel.innerHTML = evolutionChainTemplate(levels);
-    })
+    .then((levels) => showEvolution(panel, levels))
     .catch(() => {
       panel.innerHTML = evolutionStatusTemplate("Evolution chain unavailable.");
     });
