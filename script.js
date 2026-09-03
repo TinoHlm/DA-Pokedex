@@ -1,19 +1,19 @@
 const apiBaseUrl = "https://pokeapi.co/api/v2/pokemon";
-const pageSize = 20; // Number of Pokemon per page
-const placeholderImage = "./assets/imgs/unknown-pokemon.png"; // Image when the Pokemon doesnt have an Image Linked
+const pageSize = 20;
+const placeholderImage = "./assets/imgs/unknown-pokemon.png";
 
-let totalPages = 0; // Number of available pages (set after first fetch)
-let currentPage = 1; // Current page
-let isLoading = false; // Blocks further page loads while one is running
-let allPokemonNames = null; // Cached name list for the search
-let currentList = []; // Pokemon currently shown in the list
-let currentIndex = 0; // Index of the Pokemon shown in the dialog
-let isDialogBusy = false; // Blocks dialog navigation while a page is loading
+let totalPages = 0;
+let currentPage = 1;
+let isLoading = false;
+let allPokemonNames = null;
+let currentList = [];
+let currentIndex = 0;
+let isDialogBusy = false;
 
-const pageCache = new Map(); // Caches pages that have been already loaded
-const pokemonCache = new Map(); // Caches single Pokemon models by url
-const evolutionCache = new Map(); // Caches evolution chains by species url
-const searchLimit = 30; // Maximum number of search results to load
+const pageCache = new Map();
+const pokemonCache = new Map();
+const evolutionCache = new Map();
+const searchLimit = 30;
 
 function getPageOffset(page) {
   return (page - 1) * pageSize;
