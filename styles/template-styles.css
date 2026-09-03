@@ -34,7 +34,8 @@ body.is-search [data-id="pokemon-list"] {
   [data-id="pokemon-list"] {
     flex: 1;
     min-height: 0;
-    grid-auto-rows: minmax(0, 1fr);
+    grid-auto-rows: minmax(0, 240px);
+    align-content: start;
   }
 }
 
