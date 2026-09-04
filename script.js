@@ -24,20 +24,21 @@ function getPageUrl(page) {
   return `${apiBaseUrl}?offset=${offset}&limit=${pageSize}`;
 }
 
+function checkResponse(response) {
+  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+  return response.json();
+}
+
 function fetchPokemonPage(page) {
   const pageUrl = getPageUrl(page);
 
-  return fetch(pageUrl).then((response) => {
-    return response.json();
-  });
+  return fetch(pageUrl).then(checkResponse);
 }
 
 function fetchPokemonDetails(pokemon) {
   const pokemonDetailsUrl = pokemon.url;
 
-  return fetch(pokemonDetailsUrl).then((response) => {
-    return response.json();
-  });
+  return fetch(pokemonDetailsUrl).then(checkResponse);
 }
 
 function fetchPageDetails(page) {
@@ -54,7 +55,7 @@ function fetchAllPokemonNames() {
   if (allPokemonNames) return Promise.resolve(allPokemonNames);
 
   return fetch(`${apiBaseUrl}?limit=100000&offset=0`)
-    .then((response) => response.json())
+    .then(checkResponse)
     .then((pageData) => {
       allPokemonNames = pageData.results;
       return allPokemonNames;
@@ -148,9 +149,15 @@ function renderPage(page) {
     return preloadImages(pokemon).then(() => {
       document.body.classList.remove("is-search");
       setPaginationVisible(true);
+      showMessage("");
       renderCards(pokemon);
     });
   });
+}
+
+function renderLoadError() {
+  document.querySelector('[data-id="pokemon-list"]').innerHTML = "";
+  showMessage(errorTemplate());
 }
 
 function buildTypeIcons(types) {
@@ -210,7 +217,9 @@ function goToPage(page, pushUrl = true) {
   if (pushUrl) history.pushState({ page }, "", `?page=${page}`);
 
   setLoading(true);
-  return renderPage(page).finally(() => finishPageChange());
+  return renderPage(page)
+    .catch(() => renderLoadError())
+    .finally(() => finishPageChange());
 }
 
 function finishPageChange() {
@@ -272,6 +281,7 @@ function runSearch() {
 
   return findPokemonByName(term)
     .then((matches) => renderSearchResults(matches))
+    .catch(() => renderLoadError())
     .finally(() => setLoading(false));
 }
 
@@ -476,9 +486,9 @@ function getEvolutionLevels(chain) {
 
 function fetchChainData(speciesUrl) {
   return fetch(speciesUrl)
-    .then((response) => response.json())
+    .then(checkResponse)
     .then((species) => fetch(species.evolution_chain.url))
-    .then((response) => response.json());
+    .then(checkResponse);
 }
 
 function fetchEvolutionChain(speciesUrl) {

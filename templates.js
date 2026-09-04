@@ -190,6 +190,22 @@ function evolutionChainTemplate(levels, layout) {
   return `<div class="evolution-chain ${layout}">${levels}</div>`;
 }
 
+function errorTemplate() {
+  return `
+    <div class="not-found">
+      <img
+        class="not-found-image"
+        src="./assets/imgs/unknown-pokemon.png"
+        alt=""
+      />
+      <div>
+        <p class="not-found-title">Something went wrong.</p>
+        <p class="not-found-hint">Please check your connection and try again.</p>
+      </div>
+    </div>
+  `;
+}
+
 function notFoundTemplate() {
   return `
     <div class="not-found">
