@@ -115,7 +115,7 @@ function toPokemonModel(details) {
     image: getPokemonImage(details),
     height: details.height / 10,
     weight: details.weight / 10,
-    abilities: details.abilities.map((entry) => entry.ability.name),
+    abilities: details.abilities.map((entry) => entry.ability.name).join(", "),
     stats: toStatsModel(details.stats),
     speciesUrl: details.species.url,
   };
@@ -153,10 +153,18 @@ function renderPage(page) {
   });
 }
 
+function buildTypeIcons(types) {
+  return types.map((type) => typeIconTemplate(type)).join("");
+}
+
+function buildTypeBadges(types) {
+  return types.map((type) => typeBadgeTemplate(type)).join("");
+}
+
 function renderCards(pokemon) {
   currentList = pokemon;
   const cards = pokemon.map((entry, index) =>
-    pokemonCardTemplate(entry, index),
+    pokemonCardTemplate(entry, index, buildTypeIcons(entry.types)),
   );
   document.querySelector('[data-id="pokemon-list"]').innerHTML = cards.join("");
 }
@@ -182,7 +190,15 @@ function setSearchHint(visible) {
 
 function renderPagination() {
   const paginationElement = document.querySelector('[data-id="pagination"]');
-  paginationElement.innerHTML = paginationTemplate(currentPage, totalPages);
+  const prevDisabled = currentPage <= 1 ? "disabled" : "";
+  const nextDisabled = currentPage >= totalPages ? "disabled" : "";
+
+  paginationElement.innerHTML = paginationTemplate(
+    currentPage,
+    totalPages,
+    prevDisabled,
+    nextDisabled,
+  );
 }
 
 function goToPage(page, pushUrl = true) {
@@ -279,11 +295,25 @@ function initSearchInput() {
   });
 }
 
+function getStatPercent(value) {
+  return Math.min(100, (value / 255) * 100);
+}
+
+function buildStatRows(stats) {
+  return Object.entries(stats)
+    .map(([name, value]) =>
+      statRowTemplate(name.replace("-", " "), value, getStatPercent(value)),
+    )
+    .join("");
+}
+
 function renderDialog() {
   const pokemon = currentList[currentIndex];
   const content = document.querySelector('[data-id="overlay-pokemon-name"]');
+  const typeBadges = buildTypeBadges(pokemon.types);
+  const statRows = buildStatRows(pokemon.stats);
 
-  content.innerHTML = dialogTemplate(pokemon);
+  content.innerHTML = dialogTemplate(pokemon, typeBadges, statRows);
   updateDialogNav();
 }
 
@@ -471,8 +501,22 @@ function loadEvolutionStages(speciesUrls) {
   return Promise.all(loads);
 }
 
+function buildEvolutionStages(level) {
+  return level.map((pokemon) => evolutionStageTemplate(pokemon)).join("");
+}
+
+function buildEvolutionChain(levels) {
+  const parts = levels.map((level) =>
+    evolutionLevelTemplate(buildEvolutionStages(level)),
+  );
+  const isBranching = levels.some((level) => level.length > 1);
+  const layout = isBranching ? "is-branching" : "is-linear";
+
+  return evolutionChainTemplate(parts.join(evolutionArrowTemplate()), layout);
+}
+
 function showEvolution(panel, levels) {
-  panel.innerHTML = evolutionChainTemplate(levels);
+  panel.innerHTML = buildEvolutionChain(levels);
 }
 
 function renderEvolution() {

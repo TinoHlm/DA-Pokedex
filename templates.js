@@ -1,10 +1,8 @@
-function pokemonTypeTemplate(types) {
-  return types
-    .map((type) => `<span class="type-badge">${type}</span>`)
-    .join("");
+function typeBadgeTemplate(type) {
+  return `<span class="type-badge">${type}</span>`;
 }
 
-function pokemonCardTemplate(pokemon, index) {
+function pokemonCardTemplate(pokemon, index, typeIcons) {
   return `
     <li class="pokemon-card">
       <button
@@ -22,7 +20,7 @@ function pokemonCardTemplate(pokemon, index) {
         />
         <span class="card-name">${pokemon.name}</span>
         <span class="card-types">
-          ${pokemonTypeIconsTemplate(pokemon.types)}
+          ${typeIcons}
         </span>
       </button>
     </li>
@@ -37,30 +35,26 @@ function typeIconTemplate(type) {
   `;
 }
 
-function pokemonTypeIconsTemplate(types) {
-  return types.map((type) => typeIconTemplate(type)).join("");
-}
-
-function dialogTemplate(pokemon) {
+function dialogTemplate(pokemon, typeBadges, statRows) {
   return `
-    ${dialogHeadTemplate(pokemon)}
+    ${dialogHeadTemplate(pokemon, typeBadges)}
     <div class="dialog-body">
       ${dialogTabsTemplate()}
       ${dialogAboutTemplate(pokemon)}
-      ${dialogStatsTemplate(pokemon)}
+      ${dialogStatsTemplate(statRows)}
       <div class="dialog-panel" data-panel="evolution" hidden></div>
     </div>
   `;
 }
 
-function dialogHeadTemplate(pokemon) {
+function dialogHeadTemplate(pokemon, typeBadges) {
   return `
     <div class="dialog-head type-${pokemon.types[0]}">
       <div class="dialog-head-text">
         <span class="dialog-id">#${String(pokemon.id).padStart(3, "0")}</span>
         <h2 class="dialog-name">${pokemon.name}</h2>
         <span class="dialog-types">
-          ${pokemonTypeTemplate(pokemon.types)}
+          ${typeBadges}
         </span>
       </div>
       <img
@@ -117,26 +111,20 @@ function dialogAboutTemplate(pokemon) {
       </div>
       <div class="dialog-row">
         <span>Abilities</span>
-        <span class="dialog-abilities">${pokemon.abilities.join(", ")}</span>
+        <span class="dialog-abilities">${pokemon.abilities}</span>
       </div>
     </div>
   `;
 }
 
-function dialogStatsTemplate(pokemon) {
-  const rows = Object.entries(pokemon.stats)
-    .map(([name, value]) => statRowTemplate(name, value))
-    .join("");
-
-  return `<div class="dialog-panel" data-panel="stats" hidden>${rows}</div>`;
+function dialogStatsTemplate(statRows) {
+  return `<div class="dialog-panel" data-panel="stats" hidden>${statRows}</div>`;
 }
 
-function statRowTemplate(name, value) {
-  const percent = Math.min(100, (value / 255) * 100);
-
+function statRowTemplate(name, value, percent) {
   return `
     <div class="stat-row">
-      <span class="stat-name">${name.replace("-", " ")}</span>
+      <span class="stat-name">${name}</span>
       <span class="stat-value">${value}</span>
       <span class="stat-bar">
         <span class="stat-fill" style="width: ${percent}%"></span>
@@ -145,10 +133,7 @@ function statRowTemplate(name, value) {
   `;
 }
 
-function paginationTemplate(page, pages) {
-  const prevDisabled = page <= 1 ? "disabled" : "";
-  const nextDisabled = page >= pages ? "disabled" : "";
-
+function paginationTemplate(page, pages, prevDisabled, nextDisabled) {
   return `
     <button
       type="button"
@@ -193,19 +178,16 @@ function evolutionStageTemplate(pokemon) {
   `;
 }
 
-function evolutionLevelTemplate(level) {
-  const stages = level.map((pokemon) => evolutionStageTemplate(pokemon));
-
-  return `<div class="evolution-level">${stages.join("")}</div>`;
+function evolutionArrowTemplate() {
+  return `<span class="evolution-arrow" aria-hidden="true">&gt;</span>`;
 }
 
-function evolutionChainTemplate(levels) {
-  const arrow = `<span class="evolution-arrow" aria-hidden="true">&gt;</span>`;
-  const parts = levels.map((level) => evolutionLevelTemplate(level));
-  const isBranching = levels.some((level) => level.length > 1);
-  const layout = isBranching ? "is-branching" : "is-linear";
+function evolutionLevelTemplate(stages) {
+  return `<div class="evolution-level">${stages}</div>`;
+}
 
-  return `<div class="evolution-chain ${layout}">${parts.join(arrow)}</div>`;
+function evolutionChainTemplate(levels, layout) {
+  return `<div class="evolution-chain ${layout}">${levels}</div>`;
 }
 
 function notFoundTemplate() {
